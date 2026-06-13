@@ -115,16 +115,18 @@ if session_ids:
     display_mapping = {}
     for filename in saved_files:
         current_id = filename[:15]
-        title_part = filename[16:].replace(".json", "")
+        # Perbaikan di sini: mengambil judul asli di belakang format tanggal dengan aman
+        title_part = filename[16:].replace(".json", "") if len(filename) > 16 else "Chat Baru"
         display_mapping[current_id] = f"💬 {title_part}"
 
     if st.session_state.current_session_id not in session_ids:
         st.session_state.current_session_id = session_ids[0]
 
+    # Menggunakan session_ids (ID bersih) sebagai options, bukan nama file mentah (.json)
     selected_session_id = st.sidebar.selectbox(
         "Pilih sesi chat lama:",
         options=session_ids,
-        format_func=lambda x: display_mapping.get(x, f"💬 Sesi {x}"),
+        format_func=lambda x: display_mapping.get(x, "💬 Chat Baru"),
         index=session_ids.index(st.session_state.current_session_id)
     )
     
