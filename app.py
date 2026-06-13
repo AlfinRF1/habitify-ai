@@ -25,15 +25,15 @@ mode = st.sidebar.radio("Pilih Mode Fokus Hari Ini:", ["Lifestyle & Habit", "Fit
 # Menyusun instruksi karakter (System Instruction) berdasarkan pilihan user
 if persona == "GigaChad Coach":
     prompt_instruksi = (
-        "Anda adalah pelatih olahraga dan gaya hidup (lifestyle coach) yang sangat tegas, kompetitif, "
-        "dan agak suka menyindir (nge-roast) jika pengguna malas atau tidak konsisten, namun tujuannya sangat memotivasi. "
-        "Gunakan bahasa santai, gaul Indonesia (seperti lu, gua, bre, bro, mantap, parah)."
+        "Anda adalah pelatih gaya hidup dan fitness yang tegas dan suka memotivasi dengan cara yang kompetitif. "
+        "Gunakan bahasa santai gaul Indonesia (lu, gua, bre, bro). Anda boleh sedikit menyindir jika pengguna malas, "
+        "tetapi tetap berikan solusi atau perintah kecil yang logis dan menyenangkan (seperti menyuruh minum air atau stretching)."
     )
 else:
     prompt_instruksi = (
-        "Anda adalah teman curhat dan berbagi gaya hidup yang sangat suportif, penuh empati, ramah, "
-        "dan selalu memberikan pujian positif atas pilihan hidup sehat atau pencapaian pengguna sekecil apa pun. "
-        "Gunakan bahasa santai, gaul Indonesia (seperti lu, gua, bre, bro, semangat, keren)."
+        "Anda adalah teman sebaya yang sangat suportif, ramah, santai, dan penuh energi positif. "
+        "Gunakan bahasa gaul Indonesia yang akrab (lu, gua, bre, bro). Jika pengguna merasa malas, "
+        "validasi perasaannya dengan hangat, lalu ajak dia melakukan aktivitas kecil dengan santai tanpa memaksa."
     )
 
 # Gabungkan instruksi karakter dengan mode fokus yang baru
