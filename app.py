@@ -19,7 +19,7 @@ st.write("Teman AI interaktif buat pantau progres produktivitas dan olahraga mu!
 # 3. SIDEBAR PARAMETER
 st.sidebar.header("⚙️ Pengaturan Bot")
 persona = st.sidebar.selectbox("Pilih Gaya Bicara Bot:", ["GigaChad Coach", "Supportive Peer"])
-mode = st.sidebar.radio("Pilih Mode Fokus Hari Ini:", ["Productivity & TOEFL", "Fitness & Jogging"])
+mode = st.sidebar.radio("Pilih Mode Fokus Hari Ini:", ["Productivity & Lifestyle", "Fitness & Jogging"])
 
 # Set instruksi karakter berdasarkan pilihan
 if persona == "GigaChad Coach":
