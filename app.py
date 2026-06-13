@@ -62,17 +62,20 @@ st.markdown("""
     }
     
     .stButton>button {
-        background: linear-gradient(135deg, #00F0FF 0%, #7000FF 100%) !important;
-        color: white !important;
-        border: none !important;
+        background: #111827 !important; /* Warna dasar gelap kalem */
+        color: #00F0FF !important; /* Teks warna biru neon biar kontrasnya pas */
+        border: 1px solid #7000FF !important; /* Border ungu neon tipis */
         border-radius: 8px !important;
         font-weight: bold !important;
-        transition: all 0.3s ease !important;
+        transition: all 0.3s ease-in-out !important;
+        box-shadow: inset 0 0 4px rgba(112, 0, 255, 0.2) !important;
     }
     
     .stButton>button:hover {
-        transform: scale(1.02) !important;
-        box-shadow: 0px 0px 12px #00F0FF !important;
+        transform: translateY(-2px) !important; /* Efek naik dikit pas di-hover */
+        background: linear-gradient(135deg, #00F0FF 0%, #7000FF 100%) !important; /* Berubah jadi full neon pas disentuh */
+        color: white !important; /* Teks berubah jadi putih biar kebaca */
+        box-shadow: 0px 0px 15px rgba(0, 240, 255, 0.6) !important; /* Efek menyala (glow) */
     }
     
     h1 {
