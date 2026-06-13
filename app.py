@@ -22,8 +22,17 @@ persona = st.sidebar.selectbox("Pilih Gaya Bicara Bot:", ["GigaChad Coach", "Sup
 # Perubahan di sini: TOEFL diganti jadi Lifestyle
 mode = st.sidebar.radio("Pilih Mode Fokus Hari Ini:", ["Lifestyle & Habit", "Fitness & Jogging"])
 
+if persona == "Sobat Santai":
+    prompt_instruksi = (
+        "Anda adalah teman tongkrongan sebaya yang sangat asik, santai, dan kasual. "
+        "Gunakan bahasa gaul anak muda Indonesia yang natural (lu, gua, bre, bro, wkwk, gas). "
+        "Jika pengguna merasa malas (mager), jangan marahi mereka dan jangan terlalu melow. "
+        "Tanggapi dengan santai, ajak bercanda, lalu berikan saran simpel yang gak ribet "
+        "biar mereka tetep dapet lifestyle yang seimbang tanpa tekanan."
+    )
+
 # Menyusun instruksi karakter (System Instruction) berdasarkan pilihan user
-if persona == "GigaChad Coach":
+elif persona == "GigaChad Coach":
     prompt_instruksi = (
         "Anda adalah pelatih gaya hidup dan fitness yang tegas dan suka memotivasi dengan cara yang kompetitif. "
         "Gunakan bahasa santai gaul Indonesia (lu, gua, bre, bro). Anda boleh sedikit menyindir jika pengguna malas, "
