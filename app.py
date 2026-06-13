@@ -2,6 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 import os
 import json
+import shutil
 from datetime import datetime
 
 API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -23,7 +24,7 @@ def save_chat_to_json(session_id, history_data):
         if user_messages:
             first_chat = user_messages[0]["content"]
             display_title = (first_chat[:25] + "...") if len(first_chat) > 25 else first_chat
-            for char in ['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>', '.']:
+            for char in ['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>', '.', '_']:
                 display_title = display_title.replace(char, '')
             display_title = display_title.strip()
 
@@ -93,10 +94,8 @@ st.sidebar.header("📜 Riwayat Percakapan")
 if st.sidebar.button("➕ Mulai Chat Baru", use_container_width=True):
     new_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     st.session_state.current_session_id = new_id
-    
     if "chat_session" in st.session_state:
         del st.session_state.chat_session
-        
     save_chat_to_json(new_id, [])
     st.rerun()
 
@@ -115,14 +114,12 @@ if session_ids:
     display_mapping = {}
     for filename in saved_files:
         current_id = filename[:15]
-        # Perbaikan di sini: mengambil judul asli di belakang format tanggal dengan aman
         title_part = filename[16:].replace(".json", "") if len(filename) > 16 else "Chat Baru"
         display_mapping[current_id] = f"💬 {title_part}"
 
     if st.session_state.current_session_id not in session_ids:
         st.session_state.current_session_id = session_ids[0]
 
-    # Menggunakan session_ids (ID bersih) sebagai options, bukan nama file mentah (.json)
     selected_session_id = st.sidebar.selectbox(
         "Pilih sesi chat lama:",
         options=session_ids,
@@ -134,6 +131,19 @@ if session_ids:
         st.session_state.current_session_id = selected_session_id
         if "chat_session" in st.session_state:
             del st.session_state.chat_session
+        st.rerun()
+        
+    # Fitur Tombol Bersihkan Semua Riwayat (Paling Baru!)
+    st.sidebar.markdown(" ")
+    if st.sidebar.button("🗑️ Bersihkan Semua Riwayat", use_container_width=True):
+        # Hapus paksa folder riwayat dan bikin baru biar benar-benar bersih dari file sampah lama
+        shutil.rmtree(HISTORY_DIR)
+        os.makedirs(HISTORY_DIR)
+        # Reset state session
+        if "chat_session" in st.session_state:
+            del st.session_state.chat_session
+        if "current_session_id" in st.session_state:
+            del st.session_state.current_session_id
         st.rerun()
 else:
     st.sidebar.write("*Belum ada riwayat chat.*")
