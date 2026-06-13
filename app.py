@@ -94,9 +94,14 @@ st.sidebar.header("📜 Riwayat Percakapan")
 if st.sidebar.button("➕ Mulai Chat Baru", use_container_width=True):
     new_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     st.session_state.current_session_id = new_id
+    
     if "chat_session" in st.session_state:
         del st.session_state.chat_session
+        
+    # Bikin file baru kosong
     save_chat_to_json(new_id, [])
+    
+    # Paksa halaman reload dari nol besar
     st.rerun()
 
 saved_files = sorted([f for f in os.listdir(HISTORY_DIR) if f.endswith(".json")], reverse=True)
@@ -159,13 +164,16 @@ if API_KEY:
 
 raw_history = load_chat_from_json(st.session_state.current_session_id)
 
+# Sinkronisasi history JSON ke format API Gemini
 api_formatted_history = []
 for msg in raw_history:
     api_role = "model" if msg["role"] == "assistant" else "user"
     api_formatted_history.append({"role": api_role, "parts": [msg["content"]]})
 
-if API_KEY and "chat_session" not in st.session_state:
-    st.session_state.chat_session = model.start_chat(history=api_formatted_history)
+# Jika user ganti persona/mode, atau klik chat baru, paksa restart session API
+if API_KEY:
+    if "chat_session" not in st.session_state:
+        st.session_state.chat_session = model.start_chat(history=api_formatted_history)
 
 st.title("⚡ HabitifyAI: Lifestyle & Fitness Companion")
 st.caption(f"📅 ID Sesi Aktif: {st.session_state.current_session_id}")
@@ -182,8 +190,9 @@ if user_input := st.chat_input("Tulis progres lu hari ini, bro..."):
     with st.chat_message("assistant"):
         try:
             # send_message lalu set stream=True
-            response_stream = st.session_state.chat_session.send_message(user_input, stream=True)
-            
+            full_prompt = f"[SYSTEM NOTE: Remember your persona is {persona} and mode is {mode}]. {user_input}"
+            response_stream = st.session_state.chat_session.send_message(full_prompt, stream=True)
+
             # Generator untuk mem-passing potongan teks (chunks) dari Gemini ke Streamlit
             def stream_chunks():
                 for chunk in response_stream:
