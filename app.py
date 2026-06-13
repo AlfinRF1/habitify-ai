@@ -98,10 +98,7 @@ if st.sidebar.button("➕ Mulai Chat Baru", use_container_width=True):
     if "chat_session" in st.session_state:
         del st.session_state.chat_session
         
-    # Bikin file baru kosong
     save_chat_to_json(new_id, [])
-    
-    # Paksa halaman reload dari nol besar
     st.rerun()
 
 saved_files = sorted([f for f in os.listdir(HISTORY_DIR) if f.endswith(".json")], reverse=True)
@@ -170,13 +167,24 @@ if API_KEY:
 
 raw_history = load_chat_from_json(st.session_state.current_session_id)
 
-# Sinkronisasi history JSON ke format API Gemini
 api_formatted_history = []
 for msg in raw_history:
     api_role = "model" if msg["role"] == "assistant" else "user"
     api_formatted_history.append({"role": api_role, "parts": [msg["content"]]})
 
-# Jika user ganti persona/mode, atau klik chat baru, paksa restart session API
+# --- PERBAIKAN DI SINI (ANTI-BUG TRACKING PERSONA & MODE) ---
+# Jika persona atau mode di sidebar berubah, hapus session lama agar model di-rebuild dengan system_instruction baru
+if "last_persona" not in st.session_state:
+    st.session_state.last_persona = persona
+if "last_mode" not in st.session_state:
+    st.session_state.last_mode = mode
+
+if persona != st.session_state.last_persona or mode != st.session_state.last_mode:
+    if "chat_session" in st.session_state:
+        del st.session_state.chat_session
+    st.session_state.last_persona = persona
+    st.session_state.last_mode = mode
+
 if API_KEY:
     if "chat_session" not in st.session_state:
         st.session_state.chat_session = model.start_chat(history=api_formatted_history)
@@ -195,16 +203,13 @@ if user_input := st.chat_input("Tulis progres lu hari ini, bro..."):
     
     with st.chat_message("assistant"):
         try:
-            # send_message lalu set stream=True
             full_prompt = f"[SYSTEM NOTE: Remember your persona is {persona} and mode is {mode}]. {user_input}"
             response_stream = st.session_state.chat_session.send_message(full_prompt, stream=True)
 
-            # Generator untuk mem-passing potongan teks (chunks) dari Gemini ke Streamlit
             def stream_chunks():
                 for chunk in response_stream:
                     yield chunk.text
             
-            # Menampilkan teks secara mengalir (streaming) otomatis di layar
             bot_response = st.write_stream(stream_chunks)
             
         except Exception as e:
