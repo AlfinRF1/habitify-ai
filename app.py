@@ -79,8 +79,15 @@ st.sidebar.header("📜 Riwayat Percakapan")
 
 # Fitur untuk membuat Sesi Chat Baru
 if st.sidebar.button("➕ Mulai Chat Baru", use_container_width=True):
-    st.session_state.current_session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    st.session_state.chat_history_list = []
+    # 1. Bikin ID sesi baru berdasarkan waktu saat ini
+    new_session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    st.session_state.current_session_id = new_session_id
+    
+    # 2. HAPUS paksa memori chat lama yang tersimpan di cache Streamlit
+    if "chat_session" in st.session_state:
+        del st.session_state.chat_session
+        
+    # 3. Rerun halaman biar langsung bersih total dari atas ke bawah
     st.rerun()
 
 # Menampilkan daftar file riwayat yang ada di server
