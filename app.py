@@ -179,13 +179,12 @@ if user_input := st.chat_input("Tulis progres lu hari ini, bro..."):
         st.markdown(user_input)
     raw_history.append({"role": "user", "content": user_input})
     
-    # Bagian 7: Proses Streaming Respons AI (Paling Update!)
     with st.chat_message("assistant"):
         try:
-            # Menggunakan send_message_stream milik Gemini API
-            response_stream = st.session_state.chat_session.send_message_stream(user_input)
+            # send_message lalu set stream=True
+            response_stream = st.session_state.chat_session.send_message(user_input, stream=True)
             
-            # Generator sederhana untuk mem-passing potongan teks (chunks) dari Gemini ke Streamlit
+            # Generator untuk mem-passing potongan teks (chunks) dari Gemini ke Streamlit
             def stream_chunks():
                 for chunk in response_stream:
                     yield chunk.text
