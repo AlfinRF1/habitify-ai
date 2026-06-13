@@ -18,7 +18,7 @@ st.write("Teman AI interaktif buat pantau progres produktivitas dan olahraga mu!
 
 # 3. SIDEBAR PARAMETER
 st.sidebar.header("⚙️ Pengaturan Bot")
-persona = st.sidebar.selectbox("Pilih Gaya Bicara Bot:", ["GigaChad Coach", "Supportive Peer"])
+persona = st.sidebar.selectbox("Pilih Gaya Bicara Bot:", ["Sobat Santai", "GigaChad Coach", "Supportive Peer"])
 # Perubahan di sini: TOEFL diganti jadi Lifestyle
 mode = st.sidebar.radio("Pilih Mode Fokus Hari Ini:", ["Lifestyle & Habit", "Fitness & Jogging"])
 
