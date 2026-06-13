@@ -79,15 +79,21 @@ st.sidebar.header("📜 Riwayat Percakapan")
 
 # Fitur untuk membuat Sesi Chat Baru
 if st.sidebar.button("➕ Mulai Chat Baru", use_container_width=True):
-    # 1. Bikin ID sesi baru berdasarkan waktu saat ini
-    new_session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    st.session_state.current_session_id = new_session_id
+    # 1. Bikin ID sesi baru berdasarkan waktu sekarang
+    new_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    st.session_state.current_session_id = new_id
     
-    # 2. HAPUS paksa memori chat lama yang tersimpan di cache Streamlit
+    # 2. Hapus paksa semua cache memory chat lama dari Streamlit
     if "chat_session" in st.session_state:
         del st.session_state.chat_session
         
-    # 3. Rerun halaman biar langsung bersih total dari atas ke bawah
+    # 3. Trik Sakti: Paksa bikin file JSON kosong baru buat ID baru ini
+    # Supaya pas script ke-reload, kodingan bawah ngebaca data kosongan
+    filepath = os.path.join(HISTORY_DIR, f"{new_id}.json")
+    with open(filepath, "w") as f:
+        json.dump([], f) # Isinya cuma list kosong []
+        
+    # 4. Rerun halaman
     st.rerun()
 
 # Menampilkan daftar file riwayat yang ada di server
