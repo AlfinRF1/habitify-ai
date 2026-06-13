@@ -1,85 +1,168 @@
 import streamlit as st
 import google.generativeai as genai
 import os
+import json
+from datetime import datetime
 
-# os.environ.get akan membaca key "GEMINI_API_KEY" yang kita set di dashboard Streamlit Cloud nanti
+# 1. AMBIL API KEY
 API_KEY = os.environ.get("GEMINI_API_KEY")
-
 if API_KEY:
     genai.configure(api_key=API_KEY)
 else:
     st.error("Waduh bro, API Key Gemini belum dikonfigurasi di Streamlit Secrets!")
 
-# 2. KONFIGURASI UI STREAMLIT
+# 2. FUNGSI UNTUK MANAJEMEN FILE RIWAYAT (JSON)
+HISTORY_DIR = "chat_histories"
+if not os.path.exists(HISTORY_DIR):
+    os.makedirs(HISTORY_DIR)
+
+def save_chat_to_json(session_id, history_data):
+    """Menyimpan history chat aktif ke file JSON"""
+    filepath = os.path.join(HISTORY_DIR, f"{session_id}.json")
+    with open(filepath, "w") as f:
+        json.dump(history_data, f, indent=4)
+
+def load_chat_from_json(session_id):
+    """Memuat history chat dari file JSON"""
+    filepath = os.path.join(HISTORY_DIR, f"{session_id}.json")
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            return json.load(f)
+    return []
+
+# 3. KONFIGURASI UI & SIDEBAR STREAMLIT
 st.set_page_config(page_title="HabitifyAI", page_icon="⚡", layout="wide")
-st.title("⚡ HabitifyAI: Productivity & Fitness Companion")
-st.write("Teman AI interaktif buat pantau progres produktivitas dan olahraga mu!")
 
+st.markdown("""
+    <style>
+    /* 1. Mengubah background dan border box chat */
+    .stChatMessage {
+        background-color: #1F2937 !important;
+        border-radius: 15px !important;
+        padding: 15px !important;
+        margin-bottom: 10px !important;
+        border: 1px solid #374151 !important;
+    }
+    
+    /* 2. Custom desain untuk tombol sidebar */
+    .stButton>button {
+        background: linear-gradient(135deg, #00F0FF 0%, #7000FF 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton>button:hover {
+        transform: scale(1.02) !important;
+        box-shadow: 0px 0px 12px #00F0FF !important;
+    }
+    
+    /* 3. Desain judul utama */
+    h1 {
+        background: -webkit-linear-gradient(#00F0FF, #7000FF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# 3. SIDEBAR PARAMETER
+# --- KONTROL SIDEBAR ---
 st.sidebar.header("⚙️ Pengaturan Bot")
 persona = st.sidebar.selectbox("Pilih Gaya Bicara Bot:", ["Sobat Santai", "GigaChad Coach", "Supportive Peer"])
-# Perubahan di sini: TOEFL diganti jadi Lifestyle
 mode = st.sidebar.radio("Pilih Mode Fokus Hari Ini:", ["Lifestyle & Habit", "Fitness & Jogging"])
 
-if persona == "Sobat Santai":
-    prompt_instruksi = (
-        "Anda adalah teman tongkrongan sebaya yang sangat asik, santai, dan kasual. "
-        "Gunakan bahasa gaul anak muda Indonesia yang natural (lu, gua, bre, bro, wkwk, gas). "
-        "Jika pengguna merasa malas (mager), jangan marahi mereka dan jangan terlalu melow. "
-        "Tanggapi dengan santai, ajak bercanda, lalu berikan saran simpel yang gak ribet "
-        "biar mereka tetep dapet lifestyle yang seimbang tanpa tekanan."
-    )
+st.sidebar.markdown("---")
+st.sidebar.header("📜 Riwayat Percakapan")
 
-# Menyusun instruksi karakter (System Instruction) berdasarkan pilihan user
-elif persona == "GigaChad Coach":
-    prompt_instruksi = (
-        "Anda adalah pelatih gaya hidup dan fitness yang tegas dan suka memotivasi dengan cara yang kompetitif. "
-        "Gunakan bahasa santai gaul Indonesia (lu, gua, bre, bro). Anda boleh sedikit menyindir jika pengguna malas, "
-        "tetapi tetap berikan solusi atau perintah kecil yang logis dan menyenangkan (seperti menyuruh minum air atau stretching)."
+# Fitur untuk membuat Sesi Chat Baru
+if st.sidebar.button("➕ Mulai Chat Baru", use_container_width=True):
+    st.session_state.current_session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    st.session_state.chat_history_list = []
+    st.rerun()
+
+# Menampilkan daftar file riwayat yang ada di server
+saved_files = sorted(os.listdir(HISTORY_DIR), reverse=True)
+session_options = [f.replace(".json", "") for f in saved_files if f.endswith(".json")]
+
+# Inisialisasi ID sesi aktif saat pertama kali buka web
+if "current_session_id" not in st.session_state:
+    if session_options:
+        st.session_state.current_session_id = session_options[0]
+    else:
+        st.session_state.current_session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+# Widget Selector untuk memilih riwayat chat lama
+if session_options:
+    selected_session = st.sidebar.selectbox(
+        "Pilih sesi chat lama:",
+        options=session_options,
+        index=session_options.index(st.session_state.current_session_id) if st.session_state.current_session_id in session_options else 0
     )
+    # Jika user memilih sesi yang berbeda di sidebar, muat datanya
+    if selected_session != st.session_state.current_session_id:
+        st.session_state.current_session_id = selected_session
+        st.rerun()
 else:
-    prompt_instruksi = (
-        "Anda adalah teman sebaya yang sangat suportif, ramah, santai, dan penuh energi positif. "
-        "Gunakan bahasa gaul Indonesia yang akrab (lu, gua, bre, bro). Jika pengguna merasa malas, "
-        "validasi perasaannya dengan hangat, lalu ajak dia melakukan aktivitas kecil dengan santai tanpa memaksa."
-    )
+    st.sidebar.write("*Belum ada riwayat chat.*")
 
-# Gabungkan instruksi karakter dengan mode fokus yang baru
-system_instruction = f"{prompt_instruksi} Saat ini Anda sedang dalam mode mendampingi pengguna untuk fokus pada perkembangan: {mode}."
+# 4. RACIK PROMPT SYSTEM & INIT GEMINI
+if persona == "Sobat Santai":
+    prompt_instruksi = "Anda adalah teman tongkrongan sebaya yang asik dan santai. Gunakan bahasa gaul anak muda Indonesia yang natural (lu, gua, bre, bro, wkwk). Tanggapi keluhan dengan santai dan solutif tanpa tekanan."
+elif persona == "GigaChad Coach":
+    prompt_instruksi = "Anda adalah pelatih olahraga dan gaya hidup yang sangat tegas, kompetitif, dan suka nge-roast jika pengguna malas, namun tujuannya memotivasi. Gunakan bahasa gaul (lu, gua, bre, bro)."
+else:
+    prompt_instruksi = "Anda adalah teman berbagi gaya hidup yang sangat suportif, penuh empati, ramah, dan selalu memuji pencapaian pengguna. Gunakan bahasa gaul (lu, gua, bre, bro, semangat)."
 
+system_instruction = f"{prompt_instruksi} Saat ini Anda memandu pengguna fokus pada: {mode}."
 
-# Inisialisasi model jika API Key aman
 if API_KEY:
-    model = genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
-        system_instruction=system_instruction
-    )
+    model = genai.GenerativeModel(model_name="gemini-2.5-flash", system_instruction=system_instruction)
 
-# 4. MEMORI CHAT (SESSION STATE)
-if "chat_session" not in st.session_state and API_KEY:
-    st.session_state.chat_session = model.start_chat(history=[])
+# 5. MEMUAT MEMORI KE LAYAR UTAMA
+# Muat data chat dari file JSON berdasarkan ID sesi yang aktif
+raw_history = load_chat_from_json(st.session_state.current_session_id)
 
-# Tampilkan history chat jika sudah ada
-if "chat_session" in st.session_state:
-    for message in st.session_state.chat_session.history:
-        role = "assistant" if message.role == "model" else "user"
-        with st.chat_message(role):
-            st.markdown(message.parts[0].text)
+# Sinkronisasi dengan API Gemini agar Gemini ingat konteks lama
+api_formatted_history = []
+for msg in raw_history:
+    api_role = "model" if msg["role"] == "assistant" else "user"
+    api_formatted_history.append({"role": api_role, "parts": [msg["content"]]})
 
-# 5. INPUT & RESPONS CHAT
-if user_input := st.chat_input("Tulis progres lu hari ini, bre..."):
+if API_KEY:
+    chat_session = model.start_chat(history=api_formatted_history)
+
+# Tampilkan seluruh riwayat percakapan sesi ini ke layar utama
+st.title("⚡ HabitifyAI: Productivity & Fitness Companion")
+st.caption(f"📅 ID Sesi Aktif: {st.session_state.current_session_id}")
+
+for msg in raw_history:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# 6. PROSES CHAT BARU
+if user_input := st.chat_input("Tulis progres lu hari ini, bro..."):
+    # 1. Tampilkan input user
     with st.chat_message("user"):
         st.markdown(user_input)
+    raw_history.append({"role": "user", "content": user_input})
     
+    # 2. Ambil respon dari Gemini
     with st.status("HabitifyAI lagi mikir...", expanded=False) as status:
         try:
-            response = st.session_state.chat_session.send_message(user_input)
+            response = chat_session.send_message(user_input)
             bot_response = response.text
             status.update(label="Selesai menganalisis!", state="complete", expanded=False)
         except Exception as e:
-            bot_response = f"Gagal memproses pesan, bre. Pastikan API Key bener. Error: {e}"
+            bot_response = f"Gagal memproses pesan, bro. Error: {e}"
             status.update(label="Gagal memproses.", state="error", expanded=False)
 
+    # 3. Tampilkan respon bot
     with st.chat_message("assistant"):
         st.markdown(bot_response)
+    raw_history.append({"role": "assistant", "content": bot_response})
+    
+    # 4. SIMPAN OTOMATIS KE FILE JSON
+    save_chat_to_json(st.session_state.current_session_id, raw_history)
