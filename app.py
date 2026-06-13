@@ -158,7 +158,7 @@ else:
 system_instruction = f"{prompt_instruksi} Saat ini Anda memandu pengguna fokus pada perkembangan: {mode}."
 
 if API_KEY:
-    model = genai.GenerativeModel(model_name="gemini-1.5-flash", system_instruction=system_instruction)
+    model = genai.GenerativeModel(model_name="gemini-2.5-flash", system_instruction=system_instruction)
 
 raw_history = load_chat_from_json(st.session_state.current_session_id)
 
