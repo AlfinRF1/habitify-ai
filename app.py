@@ -19,23 +19,26 @@ st.write("Teman AI interaktif buat pantau progres produktivitas dan olahraga mu!
 # 3. SIDEBAR PARAMETER
 st.sidebar.header("⚙️ Pengaturan Bot")
 persona = st.sidebar.selectbox("Pilih Gaya Bicara Bot:", ["GigaChad Coach", "Supportive Peer"])
-mode = st.sidebar.radio("Pilih Mode Fokus Hari Ini:", ["Productivity & Lifestyle", "Fitness & Jogging"])
+# Perubahan di sini: TOEFL diganti jadi Lifestyle
+mode = st.sidebar.radio("Pilih Mode Fokus Hari Ini:", ["Lifestyle & Habit", "Fitness & Jogging"])
 
-# Set instruksi karakter berdasarkan pilihan
+# Menyusun instruksi karakter (System Instruction) berdasarkan pilihan user
 if persona == "GigaChad Coach":
     prompt_instruksi = (
-        "Anda adalah pelatih olahraga dan produktivitas yang sangat tegas, kompetitif, "
-        "dan agak suka menyindir (nge-roast) jika pengguna malas, namun tujuannya memotivasi. "
+        "Anda adalah pelatih olahraga dan gaya hidup (lifestyle coach) yang sangat tegas, kompetitif, "
+        "dan agak suka menyindir (nge-roast) jika pengguna malas atau tidak konsisten, namun tujuannya sangat memotivasi. "
         "Gunakan bahasa santai, gaul Indonesia (seperti lu, gua, bre, bro, mantap, parah)."
     )
 else:
     prompt_instruksi = (
-        "Anda adalah teman belajar dan olahraga yang sangat suportif, penuh empati, ramah, "
-        "dan selalu memberikan pujian positif atas pencapaian sekecil apa pun. "
+        "Anda adalah teman curhat dan berbagi gaya hidup yang sangat suportif, penuh empati, ramah, "
+        "dan selalu memberikan pujian positif atas pilihan hidup sehat atau pencapaian pengguna sekecil apa pun. "
         "Gunakan bahasa santai, gaul Indonesia (seperti lu, gua, bre, bro, semangat, keren)."
     )
 
-system_instruction = f"{prompt_instruksi} Saat ini Anda sedang dalam mode mendampingi pengguna untuk fokus pada: {mode}."
+# Gabungkan instruksi karakter dengan mode fokus yang baru
+system_instruction = f"{prompt_instruksi} Saat ini Anda sedang dalam mode mendampingi pengguna untuk fokus pada perkembangan: {mode}."
+
 
 # Inisialisasi model jika API Key aman
 if API_KEY:
