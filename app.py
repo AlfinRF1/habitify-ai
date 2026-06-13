@@ -43,7 +43,7 @@ system_instruction = f"{prompt_instruksi} Saat ini Anda sedang dalam mode mendam
 # Inisialisasi model jika API Key aman
 if API_KEY:
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.5-flash",
         system_instruction=system_instruction
     )
 
