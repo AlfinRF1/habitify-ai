@@ -133,13 +133,10 @@ if session_ids:
             del st.session_state.chat_session
         st.rerun()
         
-    # Fitur Tombol Bersihkan Semua Riwayat (Paling Baru!)
     st.sidebar.markdown(" ")
     if st.sidebar.button("🗑️ Bersihkan Semua Riwayat", use_container_width=True):
-        # Hapus paksa folder riwayat dan bikin baru biar benar-benar bersih dari file sampah lama
         shutil.rmtree(HISTORY_DIR)
         os.makedirs(HISTORY_DIR)
-        # Reset state session
         if "chat_session" in st.session_state:
             del st.session_state.chat_session
         if "current_session_id" in st.session_state:
@@ -182,19 +179,25 @@ if user_input := st.chat_input("Tulis progres lu hari ini, bro..."):
         st.markdown(user_input)
     raw_history.append({"role": "user", "content": user_input})
     
-    with st.status("HabitifyAI lagi mikir...", expanded=False) as status:
+    # Bagian 7: Proses Streaming Respons AI (Paling Update!)
+    with st.chat_message("assistant"):
         try:
-            response = st.session_state.chat_session.send_message(user_input)
-            bot_response = response.text
-            status.update(label="Selesai menganalisis!", state="complete", expanded=False)
+            # Menggunakan send_message_stream milik Gemini API
+            response_stream = st.session_state.chat_session.send_message_stream(user_input)
+            
+            # Generator sederhana untuk mem-passing potongan teks (chunks) dari Gemini ke Streamlit
+            def stream_chunks():
+                for chunk in response_stream:
+                    yield chunk.text
+            
+            # Menampilkan teks secara mengalir (streaming) otomatis di layar
+            bot_response = st.write_stream(stream_chunks)
+            
         except Exception as e:
             bot_response = f"Gagal memproses pesan, bro. Error: {e}"
-            status.update(label="Gagal memproses.", state="error", expanded=False)
+            st.markdown(bot_response)
 
-    with st.chat_message("assistant"):
-        st.markdown(bot_response)
     raw_history.append({"role": "assistant", "content": bot_response})
-    
     save_chat_to_json(st.session_state.current_session_id, raw_history)
     
     if len(raw_history) <= 2:
